@@ -38,7 +38,7 @@ A comprehensive Spring Boot REST API service that allows users to create digital
 ## Quick Start
 
 ### Prerequisites
-- **Java 17** or higher ([Download here](https://adoptium.net/))
+- **Java 17** or higher ([Download here](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html))
 - **Maven 3.6** or higher ([Download here](https://maven.apache.org/download.cgi))
 - **Git** (optional, for version control)
 
