@@ -104,14 +104,39 @@ pipeline {
             steps {
                 echo "Building Docker Image..."
                 
-                // Build and push Docker image to registry
-                bat """
-                    docker build -t %DOCKER_IMAGE% .
-                    docker tag %DOCKER_IMAGE% %DOCKER_REGISTRY%/%DOCKER_IMAGE%
-                    docker push %DOCKER_REGISTRY%/%DOCKER_IMAGE%
-                """
-                
-                echo "Docker Image built and pushed successfully"
+                script {
+                    try {
+                        // First, try to build the Docker image
+                        bat """
+                            docker build -t %DOCKER_IMAGE% .
+                            echo Docker image built successfully
+                        """
+                        
+                        // Check if registry is accessible
+                        bat """
+                            echo Testing registry connectivity...
+                            curl -X GET http://%DOCKER_REGISTRY%/v2/_catalog || echo Registry not accessible
+                        """
+                        
+                        // Try to push to registry with timeout
+                        bat """
+                            echo Attempting to push to registry...
+                            timeout 30 docker push %DOCKER_REGISTRY%/%DOCKER_IMAGE%
+                        """
+                        
+                        echo "Docker Image built and pushed to registry successfully"
+                        
+                    } catch (Exception e) {
+                        echo "Registry push failed, continuing with local deployment..."
+                        echo "Error: ${e.getMessage()}"
+                        
+                        // Tag the image for local use
+                        bat """
+                            docker tag %DOCKER_IMAGE% %DOCKER_REGISTRY%/%DOCKER_IMAGE%
+                            echo Docker image tagged for local deployment
+                        """
+                    }
+                }
             }
         }
 
@@ -122,13 +147,16 @@ pipeline {
             steps {
                 echo "Deploying Application..."
                 
-                // Deploy the application using Docker
-                bat """
-                    docker rm -f %APP_NAME% || echo Container not found
-                    docker run -d -p %HOST_PORT%:8080 --name %APP_NAME% %DOCKER_IMAGE%
-                """
-                
-                echo "Application deployed successfully"
+                script {
+                    // Deploy the application using Docker
+                    bat """
+                        docker rm -f %APP_NAME% || echo Container not found
+                        docker run -d -p %HOST_PORT%:8080 --name %APP_NAME% %DOCKER_IMAGE%
+                    """
+                    
+                    echo "Application deployed successfully"
+                    echo "Application URL: http://localhost:${HOST_PORT}"
+                }
             }
         }
 
