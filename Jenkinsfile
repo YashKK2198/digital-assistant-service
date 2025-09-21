@@ -259,7 +259,7 @@ pipeline {
         // Actions on failed build
         failure {
             echo "Ohhh Noo Yash!! Pipeline FAILED!"
-            echo " Check the logs above for error details"
+            echo "Check the logs above for error details"
             
             // Send failure notification (customize as needed)
             // emailext (
@@ -270,10 +270,10 @@ pipeline {
         }
         
         // Actions on unstable build
-        unstable {
-            echo " Pipeline UNSTABLE!"
-            echo " Some tests may have failed, but deployment continued"
-        }
-    }
-}
+        unstable(""" 
+            echo "Pipeline UNSTABLE!"
+            echo "Some tests may have failed, but deployment continued"""
+        )
+     }
+   }
 }
