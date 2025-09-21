@@ -38,9 +38,10 @@ FROM openjdk:8-jre-alpine AS runtime
 WORKDIR /app
 
 # Copy built JAR from builder stage
+# Update the JAR name if your pom.xml uses a different artifactId/version
 COPY --from=builder /app/target/digital-assistant-service-1.0.0.jar app.jar
 
-# Expose port 8080 for the application
+# Expose port 8080
 EXPOSE 8080
 
 # Set JVM options for better container performance
