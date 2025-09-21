@@ -23,219 +23,134 @@ pipeline {
         DOCKER_IMAGE = "${APP_NAME}:${APP_VERSION}"
         
         // Docker configuration
-        DOCKER_REGISTRY = 'localhost:5000'  // Local registry for demo
-        CONTAINER_NAME = 'digital-assistant-app'
-        
-        // Application ports
-        APP_PORT = '8080'
+        DOCKER_REGISTRY = 'localhost:5000'  // Local registry for testing
         HOST_PORT = '8080'
-        
-        // Maven configuration
-        MAVEN_OPTS = '-Xmx1024m'
     }
-    
-    // Pipeline stages
+
     stages {
-        
+
         // ===================================================================
-        // STAGE 1: CHECKOUT SOURCE CODE
+        // CHECKOUT STAGE
         // ===================================================================
         stage('Checkout') {
             steps {
                 echo "Starting CI/CD Pipeline for Digital Assistant Service"
                 echo "Build Number: ${BUILD_NUMBER}"
-                echo " Docker Image: ${DOCKER_IMAGE}"
+                echo "Docker Image: ${DOCKER_IMAGE}"
                 
-                // Checkout code from Git repository
+                // Pull latest source code from Git
                 checkout scm
-            
                 echo "Source code checked out successfully"
                 echo "Working directory: ${WORKSPACE}"
             }
         }
-        
+
         // ===================================================================
-        // STAGE 2: BUILD APPLICATION
+        // BUILD STAGE
         // ===================================================================
         stage('Build') {
             steps {
                 echo "Building Digital Assistant Service..."
                 
-                // Clean and compile the application
+                // Clean and compile the application (Windows-friendly Maven wrapper)
                 bat '''
-                    echo "Setting up Maven wrapper permissions..."
-                    chmod +x mvnw
-                    
-                    echo "Cleaning previous builds..."
-                    ./mvnw clean
-                    
-                    echo "Compiling Java source code..."
-                    ./mvnw compile
+                    echo Cleaning previous builds...
+                    call mvnw.cmd clean
+
+                    echo Compiling Java source code...
+                    call mvnw.cmd compile
                 '''
                 
                 echo "Application built successfully"
             }
-            
-            // Archive build artifacts
-            post {
-                success {
-                    echo "Build artifacts archived"
-                }
-            }
         }
-        
+
         // ===================================================================
-        // STAGE 3: RUN TESTS
+        // TEST STAGE
         // ===================================================================
         stage('Test') {
             steps {
-                echo "Running unit tests..."
+                echo "Running Unit Tests..."
                 
-                // Run tests and generate reports
+                // Execute unit tests
                 bat '''
-                    echo "Executing unit tests..."
-                    ./mvnw test
-                    
-                    echo "Generating test reports..."
-                    ./mvnw surefire-report:report
+                    call mvnw.cmd test
                 '''
                 
-                echo " Tests completed successfully"
-            }
-            
-            // Publish test results
-            post {
-                always {
-                    echo "Publishing test results..."
-                    publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'target/site',
-                        reportFiles: 'surefire-report.html',
-                        reportName: 'Test Report'
-                    ])
-                }
+                echo "Tests executed"
             }
         }
-        
+
         // ===================================================================
-        // STAGE 4: PACKAGE APPLICATION
+        // PACKAGE STAGE
         // ===================================================================
         stage('Package') {
             steps {
-                echo " Packaging application..."
+                echo "Packaging Application..."
                 
-                // Create JAR file
+                // Package the application JAR file
                 bat '''
-                    echo "Creating JAR package..."
-                    ./mvnw package -DskipTests
-                    
-                    echo "JAR file created successfully"
-                    ls -la target/*.jar
+                    call mvnw.cmd package -DskipTests
                 '''
                 
                 echo "Application packaged successfully"
             }
-            
-            // Archive JAR file
-            post {
-                success {
-                    echo "Archiving JAR file..."
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-                }
-            }
         }
-        
+
         // ===================================================================
-        // STAGE 5: BUILD DOCKER IMAGE
+        // DOCKER BUILD STAGE
         // ===================================================================
         stage('Docker Build') {
             steps {
-                echo "Building Docker image..."
+                echo "Building Docker Image..."
                 
-                // Build Docker image
-                script {
-                    def dockerImage = docker.build("${DOCKER_IMAGE}")
-                    echo "Docker image built: ${DOCKER_IMAGE}"
-                }
+                // Build and push Docker image to registry
+                bat """
+                    docker build -t %DOCKER_IMAGE% .
+                    docker tag %DOCKER_IMAGE% %DOCKER_REGISTRY%/%DOCKER_IMAGE%
+                    docker push %DOCKER_REGISTRY%/%DOCKER_IMAGE%
+                """
                 
-                echo "Docker image created successfully"
-            }
-            
-            // Clean up old images
-            post {
-                success {
-                    echo "Cleaning up old Docker images..."
-                    bat '''
-                        # Remove dangling images
-                        docker image prune -f
-                        
-                        # Keep only last 3 versions
-                        docker images ${APP_NAME} --format "table {{.Tag}}\t{{.CreatedAt}}" | tail -n +4 | awk '{print $1}' | xargs -r docker rmi ${APP_NAME}:
-                    '''
-                }
+                echo "Docker Image built and pushed successfully"
             }
         }
-        
+
         // ===================================================================
-        // STAGE 6: DEPLOY APPLICATION
+        // DEPLOY STAGE
         // ===================================================================
         stage('Deploy') {
             steps {
-                echo "Deploying Digital Assistant Service..."
+                echo "Deploying Application..."
                 
-                // Stop existing container
-                bat '''
-                    echo "Stopping existing container if running..."
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                '''
-                
-                // Deploy new container
-                bat '''
-                    echo "Starting new container..."
-                    docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        -p ${HOST_PORT}:${APP_PORT} \
-                        --restart unless-stopped \
-                        ${DOCKER_IMAGE}
-                    
-                    echo "Container started successfully"
-                    docker ps | grep ${CONTAINER_NAME}
-                '''
+                // Deploy the application using Docker
+                bat """
+                    docker rm -f %APP_NAME% || echo Container not found
+                    docker run -d -p %HOST_PORT%:8080 --name %APP_NAME% %DOCKER_IMAGE%
+                """
                 
                 echo "Application deployed successfully"
             }
         }
-        
+
         // ===================================================================
-        // STAGE 7: HEALTH CHECK
+        // HEALTH CHECK STAGE
         // ===================================================================
         stage('Health Check') {
             steps {
-                echo "Performing health check..."
+                echo "Performing Health Check..."
                 
-                // Wait for application to start
+                // Run health check against the deployed service
                 bat '''
-                    echo "Waiting for application to start..."
-                    sleep 30
-                    
-                    echo "Checking application health..."
-                    curl -f http://localhost:${APP_PORT}/actuator/health || exit 1
-                    
-                    echo "Testing API endpoints..."
-                    curl -f http://localhost:${APP_PORT}/api/assistants/health || exit 1
+                    powershell -Command "Invoke-WebRequest http://localhost:%HOST_PORT%/actuator/health"
                 '''
                 
-                echo "Health check passed - Application is running correctly"
+                echo "Health Check completed"
             }
         }
     }
-    
+
     // ===================================================================
-    // POST-BUILD ACTIONS
+    // POST ACTIONS
     // ===================================================================
     post {
         // Actions to run after all stages
@@ -253,8 +168,7 @@ pipeline {
             echo " Application URL: http://localhost:${HOST_PORT}"
             echo " Health Check: http://localhost:${HOST_PORT}/actuator/health"
             echo " API Health: http://localhost:${HOST_PORT}/api/assistants/health"
-            
-
+        }
         
         // Actions on failed build
         failure {
@@ -264,16 +178,15 @@ pipeline {
             // Send failure notification (customize as needed)
             // emailext (
             //     subject: " CI/CD Failed: ${APP_NAME} Build #${BUILD_NUMBER}",
-            //     body: "Digital Assistant Service deployment failed!\n\nBuild: #${BUILD_NUMBER}\nCheck Jenkins logs for details.",
+            //     body: "Digital Assistant Service deployment failed!\\n\\nBuild: #${BUILD_NUMBER}\\nCheck Jenkins logs for details.",
             //     to: "your-email@example.com"
             // )
         }
         
         // Actions on unstable build
-        unstable(""" 
+        unstable {
             echo "Pipeline UNSTABLE!"
-            echo "Some tests may have failed, but deployment continued"""
-        )
-     }
-   }
+            echo "Some tests may have failed, but deployment continued"
+        }
+    }
 }
