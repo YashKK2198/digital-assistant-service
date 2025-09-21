@@ -8,13 +8,13 @@
 # ===================================================================
 FROM openjdk:8-jdk-alpine AS builder
 
-# Install Maven
+# Install Maven (instead of relying on mvnw)
 RUN apk add --no-cache maven
 
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml and .mvn directory (if needed for config)
+# Copy pom.xml and .mvn directory (for Maven config if present)
 COPY pom.xml .
 COPY .mvn .mvn
 
@@ -24,7 +24,7 @@ RUN mvn dependency:go-offline -B
 # Copy source code
 COPY src src
 
-# Build the application
+# Build the application (skip tests for faster build)
 RUN mvn clean package -DskipTests
 
 # ===================================================================
