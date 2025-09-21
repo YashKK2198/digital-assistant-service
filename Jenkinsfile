@@ -42,15 +42,15 @@ pipeline {
         // ===================================================================
         stage('Checkout') {
             steps {
-                echo " Starting CI/CD Pipeline for Digital Assistant Service"
-                echo " Build Number: ${BUILD_NUMBER}"
-                echo "  Docker Image: ${DOCKER_IMAGE}"
+                echo "Starting CI/CD Pipeline for Digital Assistant Service"
+                echo "Build Number: ${BUILD_NUMBER}"
+                echo " Docker Image: ${DOCKER_IMAGE}"
                 
                 // Checkout code from Git repository
                 checkout scm
             
-                echo " Source code checked out successfully"
-                echo " Working directory: ${WORKSPACE}"
+                echo "Source code checked out successfully"
+                echo "Working directory: ${WORKSPACE}"
             }
         }
         
@@ -59,7 +59,7 @@ pipeline {
         // ===================================================================
         stage('Build') {
             steps {
-                echo " Building Digital Assistant Service..."
+                echo "Building Digital Assistant Service..."
                 
                 // Clean and compile the application
                 sh '''
@@ -73,13 +73,13 @@ pipeline {
                     ./mvnw compile
                 '''
                 
-                echo " Application built successfully"
+                echo "Application built successfully"
             }
             
             // Archive build artifacts
             post {
                 success {
-                    echo "📦 Build artifacts archived"
+                    echo "Build artifacts archived"
                 }
             }
         }
@@ -89,7 +89,7 @@ pipeline {
         // ===================================================================
         stage('Test') {
             steps {
-                echo " Running unit tests..."
+                echo "Running unit tests..."
                 
                 // Run tests and generate reports
                 sh '''
@@ -106,7 +106,7 @@ pipeline {
             // Publish test results
             post {
                 always {
-                    echo "📊 Publishing test results..."
+                    echo "Publishing test results..."
                     publishTestResults testResultsPattern: 'target/surefire-reports/*.xml'
                     publishHTML([
                         allowMissing: false,
@@ -136,13 +136,13 @@ pipeline {
                     ls -la target/*.jar
                 '''
                 
-                echo " Application packaged successfully"
+                echo "Application packaged successfully"
             }
             
             // Archive JAR file
             post {
                 success {
-                    echo " Archiving JAR file..."
+                    echo "Archiving JAR file..."
                     archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
                 }
             }
@@ -153,7 +153,7 @@ pipeline {
         // ===================================================================
         stage('Docker Build') {
             steps {
-                echo " Building Docker image..."
+                echo "Building Docker image..."
                 
                 // Build Docker image
                 script {
@@ -161,13 +161,13 @@ pipeline {
                     echo "Docker image built: ${DOCKER_IMAGE}"
                 }
                 
-                echo " Docker image created successfully"
+                echo "Docker image created successfully"
             }
             
             // Clean up old images
             post {
                 success {
-                    echo " Cleaning up old Docker images..."
+                    echo "Cleaning up old Docker images..."
                     sh '''
                         # Remove dangling images
                         docker image prune -f
@@ -184,7 +184,7 @@ pipeline {
         // ===================================================================
         stage('Deploy') {
             steps {
-                echo " Deploying Digital Assistant Service..."
+                echo "Deploying Digital Assistant Service..."
                 
                 // Stop existing container
                 sh '''
@@ -206,7 +206,7 @@ pipeline {
                     docker ps | grep ${CONTAINER_NAME}
                 '''
                 
-                echo " Application deployed successfully"
+                echo "Application deployed successfully"
             }
         }
         
@@ -215,7 +215,7 @@ pipeline {
         // ===================================================================
         stage('Health Check') {
             steps {
-                echo " Performing health check..."
+                echo "Performing health check..."
                 
                 // Wait for application to start
                 sh '''
@@ -229,7 +229,7 @@ pipeline {
                     curl -f http://localhost:${APP_PORT}/api/assistants/health || exit 1
                 '''
                 
-                echo " Health check passed - Application is running correctly"
+                echo "Health check passed - Application is running correctly"
             }
         }
     }
@@ -240,7 +240,7 @@ pipeline {
     post {
         // Actions to run after all stages
         always {
-            echo " Pipeline execution completed"
+            echo "Pipeline execution completed"
             
             // Clean workspace
             cleanWs()
