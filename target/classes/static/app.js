@@ -1,54 +1,17 @@
 /**
- * Digital Assistant Service - Frontend JavaScript Application
- * 
- * This JavaScript file provides the frontend functionality for interacting
- * with the Digital Assistant Service REST API.
- * 
- * Key Features:
- * 1. Create and update digital assistants
- * 2. Send messages to assistants and display responses
- * 3. List and manage existing assistants
- * 4. Real-time UI updates and error handling
- * 
- * API Integration:
- * - Uses modern Fetch API for HTTP requests
- * - Handles JSON request/response format
- * - Implements proper error handling and user feedback
- * 
- * @author Digital Assistant Team
- * @version 1.0.0
+ * Frontend JavaScript for Digital Assistant Service
+ * I implemented this to provide a user-friendly interface for creating assistants
+ * and sending messages through the REST API.
  */
 
-// ===================================================================
-// CONFIGURATION AND CONSTANTS
-// ===================================================================
-
-/**
- * Base URL for the Digital Assistant API
- * Change this if deploying to a different host/port
- */
+// API Configuration
 const API_BASE_URL = 'http://localhost:8080/api/assistants';
-
-/**
- * HTTP request headers for JSON communication
- */
 const JSON_HEADERS = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
 };
 
-// ===================================================================
-// APPLICATION INITIALIZATION
-// ===================================================================
-
-/**
- * Initialize the application when the DOM is fully loaded
- * 
- * This function sets up:
- * - Event listeners for forms
- * - Initial data loading
- * - UI state management
- */
+// Initialize application when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Digital Assistant Frontend Initialized');
     

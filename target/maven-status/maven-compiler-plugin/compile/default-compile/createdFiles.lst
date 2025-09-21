@@ -1,0 +1,8 @@
+com\example\digitalassistant\model\Assistant.class
+com\example\digitalassistant\model\MessageResponse.class
+com\example\digitalassistant\service\AssistantService$AssistantNotFoundException.class
+com\example\digitalassistant\controller\AssistantController.class
+com\example\digitalassistant\DigitalAssistantApplication.class
+com\example\digitalassistant\model\MessageRequest.class
+com\example\digitalassistant\repository\AssistantRepository.class
+com\example\digitalassistant\service\AssistantService.class
