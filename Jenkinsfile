@@ -62,7 +62,7 @@ pipeline {
                 echo "Building Digital Assistant Service..."
                 
                 // Clean and compile the application
-                sh '''
+                bat '''
                     echo "Setting up Maven wrapper permissions..."
                     chmod +x mvnw
                     
@@ -92,7 +92,7 @@ pipeline {
                 echo "Running unit tests..."
                 
                 // Run tests and generate reports
-                sh '''
+                bat '''
                     echo "Executing unit tests..."
                     ./mvnw test
                     
@@ -128,7 +128,7 @@ pipeline {
                 echo " Packaging application..."
                 
                 // Create JAR file
-                sh '''
+                bat '''
                     echo "Creating JAR package..."
                     ./mvnw package -DskipTests
                     
@@ -168,7 +168,7 @@ pipeline {
             post {
                 success {
                     echo "Cleaning up old Docker images..."
-                    sh '''
+                    bat '''
                         # Remove dangling images
                         docker image prune -f
                         
@@ -187,14 +187,14 @@ pipeline {
                 echo "Deploying Digital Assistant Service..."
                 
                 // Stop existing container
-                sh '''
+                bat '''
                     echo "Stopping existing container if running..."
                     docker stop ${CONTAINER_NAME} || true
                     docker rm ${CONTAINER_NAME} || true
                 '''
                 
                 // Deploy new container
-                sh '''
+                bat '''
                     echo "Starting new container..."
                     docker run -d \
                         --name ${CONTAINER_NAME} \
@@ -218,7 +218,7 @@ pipeline {
                 echo "Performing health check..."
                 
                 // Wait for application to start
-                sh '''
+                bat '''
                     echo "Waiting for application to start..."
                     sleep 30
                     
