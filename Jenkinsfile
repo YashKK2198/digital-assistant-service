@@ -24,7 +24,7 @@ pipeline {
         
         // Docker configuration
         DOCKER_REGISTRY = 'localhost:5000'  // Local registry for testing
-        HOST_PORT = '8080'
+        HOST_PORT = '8081'
     }
 
     stages {
@@ -148,38 +148,17 @@ pipeline {
                 echo "Deploying Application..."
                 
                 script {
-                    try {
-                        // Deploy the application using Docker with port conflict handling
-                        bat """
-                            echo Stopping and removing existing containers...
-                            docker rm -f %APP_NAME% || echo Container not found
-                            
-                            echo Killing any processes using port %HOST_PORT%...
-                            for /f "tokens=5" %%a in ('netstat -ano ^| findstr :%HOST_PORT%') do taskkill /f /pid %%a 2>nul || echo No process found on port %HOST_PORT%
-                            
-                            echo Waiting for port to be released...
-                            timeout /t 3 /nobreak >nul
-                            
-                            echo Starting new container...
-                            docker run -d -p %HOST_PORT%:8080 --name %APP_NAME% %DOCKER_IMAGE%
-                        """
+                    // Deploy the application using Docker
+                    bat """
+                        echo Stopping and removing existing containers...
+                        docker rm -f %APP_NAME% || echo Container not found
                         
-                        echo "Application deployed successfully"
-                        echo "Application URL: http://localhost:${HOST_PORT}"
-                        
-                    } catch (Exception e) {
-                        echo "Port conflict detected, trying alternative approach..."
-                        
-                        // Try with a different port
-                        bat """
-                            echo Trying alternative port 8081...
-                            docker rm -f %APP_NAME%-alt || echo Alternative container not found
-                            docker run -d -p 8081:8080 --name %APP_NAME%-alt %DOCKER_IMAGE%
-                        """
-                        
-                        echo "Application deployed on alternative port"
-                        echo "Application URL: http://localhost:8081"
-                    }
+                        echo Starting new container...
+                        docker run -d -p %HOST_PORT%:8080 --name %APP_NAME% %DOCKER_IMAGE%
+                    """
+                    
+                    echo "Application deployed successfully"
+                    echo "Application URL: http://localhost:${HOST_PORT}"
                 }
             }
         }
@@ -191,12 +170,32 @@ pipeline {
             steps {
                 echo "Performing Health Check..."
                 
-                // Run health check against the deployed service
-                bat '''
-                    powershell -Command "Invoke-WebRequest http://localhost:%HOST_PORT%/actuator/health"
-                '''
-                
-                echo "Health Check completed"
+                script {
+                    // Wait for application to start
+                    bat """
+                        echo Waiting for application to start...
+                        timeout /t 10 /nobreak >nul
+                    """
+                    
+                    // Test multiple endpoints
+                    bat '''
+                        echo Testing Spring Boot Actuator Health...
+                        powershell -Command "try { Invoke-WebRequest http://localhost:%HOST_PORT%/actuator/health -UseBasicParsing | Select-Object StatusCode } catch { Write-Host 'Actuator health check failed' }"
+                        
+                        echo Testing Custom Health Endpoint...
+                        powershell -Command "try { Invoke-WebRequest http://localhost:%HOST_PORT%/api/assistants/health -UseBasicParsing | Select-Object StatusCode } catch { Write-Host 'Custom health check failed' }"
+                        
+                        echo Testing Frontend...
+                        powershell -Command "try { Invoke-WebRequest http://localhost:%HOST_PORT%/ -UseBasicParsing | Select-Object StatusCode } catch { Write-Host 'Frontend check failed' }"
+                    '''
+                    
+                    echo "Health Check completed"
+                    echo "Available endpoints:"
+                    echo "- Frontend: http://localhost:${HOST_PORT}/"
+                    echo "- API Health: http://localhost:${HOST_PORT}/api/assistants/health"
+                    echo "- Spring Health: http://localhost:${HOST_PORT}/actuator/health"
+                    echo "- All Assistants: http://localhost:${HOST_PORT}/api/assistants"
+                }
             }
         }
     }
