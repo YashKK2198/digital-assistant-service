@@ -174,7 +174,7 @@ pipeline {
                     // Wait for application to start
                     bat """
                         echo Waiting for application to start...
-                        timeout /t 10 /nobreak >nul
+                        timeout /t 10 /nobreak
                     """
                     
                     // Test multiple endpoints
