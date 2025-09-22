@@ -1,7 +1,7 @@
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\controller\AssistantController.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\service\AssistantService.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\repository\AssistantRepository.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\model\MessageRequest.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\DigitalAssistantApplication.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\model\Assistant.java
-C:\Users\I743759\Desktop\Digital Assistant Service\src\main\java\com\example\digitalassistant\model\MessageResponse.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\model\MessageRequest.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\model\MessageResponse.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\repository\AssistantRepository.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\DigitalAssistantApplication.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\model\Assistant.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\service\AssistantService.java
+C:\Users\I743759\Desktop\digital-assistant-service\src\main\java\com\example\digitalassistant\controller\AssistantController.java
